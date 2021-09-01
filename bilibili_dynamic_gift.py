@@ -10,9 +10,13 @@ class Bili():
         self.sendurl = 'http://api.vc.bilibili.com/dynamic_repost/v1/dynamic_repost/repost'
         self.followurl = 'http://api.bilibili.com/x/relation/modify'
 
+        # 填你的b站uid
         self.uid = ''
+        # 先找cookie，抓下来以后找里面的bili_jct，以前叫crsf，懒得改了
         self.crsf = ''
+        # 不会抓百度
         self.cookie = {'Cookie': ''}
+        # 网上随便找个好了
         self.header = {'User-Agent': ''}
 
     def get(self):
@@ -49,7 +53,8 @@ class Bili():
         requests.post(self.sendurl, data=data, cookies=self.cookie, headers=self.header)
 
 if __name__ == "__main__":
-    host_uids = [570080629, 396875336, 18945618, 240882878, 232069135, 18975614, 454018970, 7761703, 498629724, 329616507]
+    # 这个是关键，你要去找一些b站上的抽奖号的uid，填进去就能转发他们的动态了
+    host_uids = []
     geturl = 'http://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?host_uid=%s&offset_dynamic_id=0'
     sum = 0
     str_list = ['来当分母= =', '让我中一次吧QAQ', '继续分母', '转发动态', '单纯想中次奖']
@@ -60,7 +65,8 @@ if __name__ == "__main__":
         geturl1 = geturl % (host_uid)
         for item in tqdm(bili.get()):
             time.sleep(random.randint(1,5))
-            db = pymysql.connect()
+            # 数据库配置一下,具体配置写别的地方了
+            db = pymysql.connect(host="", port=3306, user="", password="", db="", charset='utf8')
             cursor = db.cursor()
             insert_sql = "insert into bili (content_id) values ('%s')" % item['dynamic_id']
             select_sql = "select * from bili where content_id = " + item['dynamic_id']
@@ -93,6 +99,6 @@ if __name__ == "__main__":
             if i % 10 == 0:
                 time.sleep(random.randint(5,15))
         time.sleep(random.randint(25,35))
-        print("j:" + str(j))
+        print("第" + str(i) + "个" + ":" + str(j))
         sum = sum+j
     print("sum:" + str(sum))
