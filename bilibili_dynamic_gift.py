@@ -2,7 +2,6 @@ import requests
 import re
 import time
 import random
-from tqdm import tqdm
 
 class Bili():
     def __init__(self):
@@ -20,6 +19,19 @@ class Bili():
 
         self.sendurl = 'https://api.bilibili.com/x/dynamic/feed/create/dyn?csrf={}'.format(self.crsf)
         self.followurl = 'http://api.bilibili.com/x/relation/modify'
+
+    def test_connection(self):
+        data = {
+            'fid': '182791419',
+            'act': 1,
+            're_src': 11,
+            'jsonp': 'jsonp',
+            'csrf': self.crsf
+        }
+        res = requests.post(self.followurl, data=data, cookies=self.cookie, headers=self.header)
+        if res.json()['code'] == -101:
+            return 0
+        return 1
 
     def get(self):
         res = requests.get(geturl1, cookies=self.cookie, headers=self.header)
@@ -73,15 +85,18 @@ class Bili():
 
 if __name__ == "__main__":
     # 这个是关键，你要去找一些b站上的抽奖号的uid，填进去就能转发他们的动态了
-    host_uids = []
+    host_uids = [153440040]    # 这是我的号，找不到抽奖号的就关注下我跟着我的号转好了
     geturl = 'http://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?host_uid=%s&offset_dynamic_id=0'
     sum = 0
     bili = Bili()
+    if not bili.test_connection():
+        print('cookie过期了')
+        exit(0)
     for host_uid in host_uids:
         i = 0
         j = 0
         geturl1 = geturl % (host_uid)
-        for item in tqdm(bili.get()):
+        for item in bili.get():
             time.sleep(random.randint(5, 10))
             try:
                 with open("data/dynamic_id.txt", "r", encoding="utf-8") as f:
@@ -115,9 +130,9 @@ if __name__ == "__main__":
                         print('写入动态失败, 当前id为：' + item['dynamic_id'])
             except:
                 print("搜索失败, 当前id为：" + item['dynamic_id'])
-            i += 1
-            if i % 10 == 0:
-                time.sleep(random.randint(10, 25))
+        i += 1
+        if i % 10 == 0:
+            time.sleep(random.randint(10, 25))
         time.sleep(random.randint(25, 35))
         sum += j
     print("sum:" + str(sum))
